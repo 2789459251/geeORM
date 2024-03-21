@@ -1,36 +1,51 @@
 package geeorm
 
-/*用户交互*/
 import (
 	"database/sql"
-	"geeORM/geeorm/mylog"
-	"geeORM/geeorm/session"
+	"geeorm/dialect"
+	"geeorm/log"
+	"geeorm/session"
 )
 
+// Engine is the main struct of geeorm, manages all db sessions and transactions.
 type Engine struct {
-	db *sql.DB
+	db      *sql.DB
+	dialect dialect.Dialect
 }
 
+// NewEngine create a instance of Engine
+// connect database and ping it to test whether it's alive
 func NewEngine(driver, source string) (e *Engine, err error) {
 	db, err := sql.Open(driver, source)
 	if err != nil {
-		mylog.Error(err)
+		log.Error(err)
 		return
 	}
+	// Send a ping to make sure the database connection is alive.
 	if err = db.Ping(); err != nil {
-		mylog.Error(err)
+		log.Error(err)
 		return
 	}
-	e = &Engine{db: db}
-	mylog.Info("数据库连接成功")
+	// make sure the specific dialect exists
+	dial, ok := dialect.GetDialect(driver)
+	if !ok {
+		log.Errorf("dialect %s Not Found", driver)
+		return
+	}
+	e = &Engine{db: db, dialect: dial}
+	log.Info("Connect database success")
 	return
 }
+
+// Close database connection
 func (engine *Engine) Close() {
 	if err := engine.db.Close(); err != nil {
-		mylog.Error("关闭数据库失败")
+		log.Error("Failed to close database")
 	}
-	mylog.Info("关闭数据库成功")
+	log.Info("Close database success")
 }
+
+// NewSession creates a new session for next operations
 func (engine *Engine) NewSession() *session.Session {
-	return session.New(engine.db)
+	return session.New(engine.db, engine.dialect)
 }

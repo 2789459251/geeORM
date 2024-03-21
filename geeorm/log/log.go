@@ -1,4 +1,4 @@
-package mylog
+package log
 
 import (
 	"io/ioutil"
@@ -14,6 +14,7 @@ var (
 	mu       sync.Mutex
 )
 
+// log methods
 var (
 	Error  = errorLog.Println
 	Errorf = errorLog.Printf
@@ -21,12 +22,14 @@ var (
 	Infof  = infoLog.Printf
 )
 
+// log levels
 const (
 	InfoLevel = iota
 	ErrorLevel
-	Disable
+	Disabled
 )
 
+// SetLevel controls log level
 func SetLevel(level int) {
 	mu.Lock()
 	defer mu.Unlock()
