@@ -50,10 +50,9 @@ func _values(values ...interface{}) (string, []interface{}) {
 	return sql.String(), vars
 }
 func _select(values ...interface{}) (string, []interface{}) {
-	fmt.Println(values...)
-	fmt.Println(reflect.TypeOf(values))
+	fmt.Println(reflect.TypeOf(values[1]))
 	tableName := values[0]
-	fields := strings.Join(values[0].([]string), ",") //展示的字段名
+	fields := strings.Join(values[1].([]string), ",") //展示的字段名
 
 	return fmt.Sprintf("SELECT %v FROM %s", fields, tableName), []interface{}{}
 }
