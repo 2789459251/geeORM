@@ -12,3 +12,8 @@ func TestSelect(t *testing.T) {
 	t.Log(sql, vars)
 
 }
+func TestClause_Build(t *testing.T) {
+	t.Run("select", func(t *testing.T) {
+		TestSelect(t)
+	})
+}

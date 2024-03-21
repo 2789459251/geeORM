@@ -2,7 +2,6 @@ package clause
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 )
 
@@ -42,7 +41,7 @@ func _values(values ...interface{}) (string, []interface{}) {
 			bindStr = genBindVars(len(v))
 		}
 		sql.WriteString(fmt.Sprintf("(%v)", bindStr))
-		if i+1 == len(values) {
+		if i+1 != len(values) {
 			sql.WriteString(", ")
 		}
 		vars = append(vars, v...) //切片里面存切片
@@ -50,7 +49,6 @@ func _values(values ...interface{}) (string, []interface{}) {
 	return sql.String(), vars
 }
 func _select(values ...interface{}) (string, []interface{}) {
-	fmt.Println(reflect.TypeOf(values[1]))
 	tableName := values[0]
 	fields := strings.Join(values[1].([]string), ",") //展示的字段名
 
