@@ -7,8 +7,10 @@ import (
 )
 
 func (s *Session) Insert(values ...interface{}) (int64, error) {
+
 	recoverValues := make([]interface{}, 0)
 	for _, value := range values {
+		s.CallMethod(BeforeInsert, value)
 		table := s.Model(value).RefTable()
 		s.clause.Set(clause.INSERT, table.Name, table.FieldNames)
 		recoverValues = append(recoverValues, table.RecordValues(value))
@@ -41,29 +43,13 @@ func (s *Session) Find(values interface{}) error {
 			//values 切片中的每个元素都是一个指向 dest 实例中相应字段的指针
 			return err
 		}
+		s.CallMethod(AfterQuery, dest.Addr().Interface())
 		destSlice.Set(reflect.Append(destSlice, dest))
-
 	}
+	s.CallMethod(AfterQuery, nil)
 	return rows.Close()
 }
 
-//	func (s *Session) Update(kv ...interface{}) (int64, error) {
-//		m, ok := kv[0].(map[string]interface{})
-//		if !ok {
-//			m = make(map[string]interface{})
-//			for i := 0; i < len(kv); i += 2 {
-//				m[kv[i].(string)] = kv[i+1]
-//			}
-//		}
-//		s.clause.Set(clause.UPDATE, s.RefTable().Name, m)
-//		//如果没有where就不用管，如果链式操作有where就需要添加上子句
-//		sql, vars := s.clause.Build(clause.UPDATE, clause.WHERE)
-//		result, err := s.Raw(sql, vars...).Exec()
-//		if err != nil {
-//			return 0, err
-//		}
-//		return result.RowsAffected()
-//	}
 func (s *Session) Update(kv ...interface{}) (int64, error) {
 	m, ok := kv[0].(map[string]interface{})
 	if !ok {
@@ -124,4 +110,5 @@ func (s *Session) Delete() (int64, error) {
 		return 0, err
 	}
 	return result.RowsAffected()
+
 }
