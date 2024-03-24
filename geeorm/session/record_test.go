@@ -19,6 +19,14 @@ func testRecordInit(t *testing.T) *Session {
 	}
 	return s
 }
+func TestSession_Limit(t *testing.T) {
+	s := testRecordInit(t)
+	var users []User
+	err := s.Limit(1).Find(&users)
+	if err != nil || len(users) != 1 {
+		t.Fatal("无法只选择一条数据")
+	}
+}
 func TestSession_Find(t *testing.T) {
 	s := testRecordInit(t)
 	var Users []User
@@ -31,5 +39,34 @@ func TestSession_Insert(t *testing.T) {
 	affect, err := s.Insert(user3)
 	if err != nil || affect != 1 {
 		t.Fatal("插入失败")
+	}
+}
+
+//	func TestSession_Update(t *testing.T) {
+//		s := testRecordInit(t)
+//		affected, _ := s.Where("Name = ?", "Tom").Update("Age", 30)
+//		u := &User{}
+//		_ = s.OrderBy("Age Desc").First(u)
+//		if affected != 1 || u.Age != 30 {
+//			t.Fatal("failed to update")
+//		}
+//	}
+func TestSession_Update(t *testing.T) {
+	s := testRecordInit(t)
+	affected, _ := s.Where("Name = ?", "Tom").Update("Age", 30)
+	u := &User{}
+	_ = s.OrderBy("Age DESC").First(u)
+
+	if affected != 1 || u.Age != 30 {
+		t.Fatal("failed to update")
+	}
+}
+func TestSession_DeleteAndCount(t *testing.T) {
+	s := testRecordInit(t)
+	affected, _ := s.Where("Name = ?", "Tom").Delete()
+	count, _ := s.Count()
+
+	if affected != 1 || count != 1 {
+		t.Fatal("failed to delete or count")
 	}
 }
