@@ -14,11 +14,21 @@ import (
 type Session struct {
 	db       *sql.DB
 	dialect  dialect.Dialect
+	tx       *sql.Tx
 	refTable *schema.Schema
 	clause   clause.Clause
 	sql      strings.Builder
 	sqlVars  []interface{}
 }
+type CommonDB interface {
+	Query(Query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
+// 太巧妙了！声明两个CommonDB赋值为sql.DB和sql.Tx然后编译器会检查这两有没有实现Common的方法
+var _ CommonDB = (*sql.DB)(nil)
+var _ CommonDB = (*sql.Tx)(nil)
 
 // New creates a instance of Session
 func New(db *sql.DB, dialect dialect.Dialect) *Session {
@@ -36,7 +46,10 @@ func (s *Session) Clear() {
 }
 
 // DB returns *sql.DB
-func (s *Session) DB() *sql.DB {
+func (s *Session) DB() CommonDB {
+	if s.tx != nil {
+		return s.tx
+	}
 	return s.db
 }
 

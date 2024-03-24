@@ -49,3 +49,29 @@ func (engine *Engine) Close() {
 func (engine *Engine) NewSession() *session.Session {
 	return session.New(engine.db, engine.dialect)
 }
+
+type TxFunc func(s *session.Session) ([]interface{}, error)
+
+// 事务执行函数
+func (engine *Engine) Transaction(f TxFunc) (result interface{}, err error) {
+	s := engine.NewSession()
+	if err := s.Begin(); err != nil {
+		return nil, err
+	}
+	defer func() {
+		//需要修护，事务出问题了
+		if p := recover(); p != nil {
+			//p表示的是捕获的panic的值
+			_ = s.Rollback()
+			//业务出问题了，panic一下
+			panic(p)
+		} else if err != nil {
+			//事务有问题，回滚
+			_ = s.Rollback()
+		} else {
+			err = s.Commit()
+		}
+	}()
+	//f就是事务
+	return f(s)
+}
